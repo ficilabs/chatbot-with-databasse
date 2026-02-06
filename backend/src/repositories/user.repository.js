@@ -1,35 +1,46 @@
 const db = require("../db/database");
 
-const create = (name, role, note) => {
-  return db.prepare(
-    "INSERT INTO users (name, role, note) VALUES (?, ?, ?)"
-  ).run(name, role, note);
+const create = async (name, role, note) => {
+  const result = await db.query(
+    "INSERT INTO users (name, role, note) VALUES ($1, $2, $3) RETURNING id",
+    [name, role, note]
+  );
+  return result.rows[0];
 };
 
-const findAll = () => {
-  return db.prepare("SELECT * FROM users").all();
+const findAll = async () => {
+  const result = await db.query("SELECT * FROM users ORDER BY id ASC");
+  return result.rows;
 };
 
-const findById = (id) => {
-  return db.prepare(
-    "SELECT * FROM users WHERE id = ?"
-  ).get(id);
+const findById = async (id) => {
+  const result = await db.query(
+    "SELECT * FROM users WHERE id = $1",
+    [id]
+  );
+  return result.rows[0] || null;
 };
 
-const update = (id, name, role, note) => {
-  return db.prepare(`
+const update = async (id, name, role, note) => {
+  const result = await db.query(
+    `
     UPDATE users SET
-      name = ?,
-      role = ?,
-      note = ?
-    WHERE id = ?
-  `).run(name, role, note, id);
+      name = $1,
+      role = $2,
+      note = $3
+    WHERE id = $4
+    `,
+    [name, role, note, id]
+  );
+  return result.rowCount;
 };
 
-const remove = (id) => {
-  return db.prepare(
-    "DELETE FROM users WHERE id = ?"
-  ).run(id);
+const remove = async (id) => {
+  const result = await db.query(
+    "DELETE FROM users WHERE id = $1",
+    [id]
+  );
+  return result.rowCount;
 };
 
 module.exports = {

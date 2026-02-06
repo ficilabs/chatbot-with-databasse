@@ -1,25 +1,19 @@
-const Database = require("better-sqlite3");
-const path = require("path");
+const { Pool } = require("pg");
+const { DATABASE_URL } = require("../config/env");
 
-// init database
-const db = new Database(path.join(__dirname, "app.db"));
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL is not set in the environment");
+}
 
-// create table
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL,
-    note TEXT
-  )
-`).run();
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-// helper
 function randomFromArray(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// random data
 const names = [
   "Andi", "Budi", "Siti", "Aisyah", "Rizky",
   "Dewi", "Fajar", "Nabila", "Agus", "Putri"
@@ -35,34 +29,37 @@ const notes = [
   null
 ];
 
-// generate random user
 function generateRandomUser() {
   return {
     name: randomFromArray(names),
     role: randomFromArray(roles),
-    note: randomFromArray(notes),
+    note: randomFromArray(notes)
   };
 }
 
-// insert random user
-const insertUser = db.prepare(`
-  INSERT INTO users (name, role, note)
-  VALUES (@name, @role, @note)
-`);
-
-// generate 1 user
-const user = generateRandomUser();
-insertUser.run(user);
-
-console.log("Random user inserted:", user);
-
-// generate many users (optional)
-for (let i = 0; i < 5; i++) {
-  insertUser.run(generateRandomUser());
+async function initDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      note TEXT
+    )
+  `);
 }
 
-console.log("5 more random users inserted");
+// initialize table on startup
+initDatabase()
+  .then(async () => {
+    const user = generateRandomUser();
+    await pool.query(
+      "INSERT INTO users (name, role, note) VALUES ($1, $2, $3)",
+      [user.name, user.role, user.note]
+    );
+    console.log("Random user inserted:", user);
+  })
+  .catch((err) => {
+    console.error("Failed to initialize database:", err);
+  });
 
-module.exports = db;
-
-//add comment for testing git
+module.exports = pool;

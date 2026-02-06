@@ -1,28 +1,28 @@
 const userRepo = require("../repositories/user.repository");
 
-const createUser = ({ name, role, note }) => {
+const createUser = async ({ name, role, note }) => {
   if (!name || !role) {
     throw new Error("name and role are required");
   }
 
-  return userRepo.create(name, role, note);
+  return await userRepo.create(name, role, note);
 };
 
-const getAllUsers = () => {
-  return userRepo.findAll();
+const getAllUsers = async () => {
+  return await userRepo.findAll();
 };
 
-const getUserById = (id) => {
-  const user = userRepo.findById(id);
+const getUserById = async (id) => {
+  const user = await userRepo.findById(id);
   if (!user) throw new Error("User not found");
   return user;
 };
 
-const updateUser = (id, data) => {
-  const user = userRepo.findById(id);
+const updateUser = async (id, data) => {
+  const user = await userRepo.findById(id);
   if (!user) throw new Error("User not found");
 
-  return userRepo.update(
+  return await userRepo.update(
     id,
     data.name ?? user.name,
     data.role ?? user.role,
@@ -30,9 +30,9 @@ const updateUser = (id, data) => {
   );
 };
 
-const deleteUser = (id) => {
-  const result = userRepo.remove(id);
-  if (result.changes === 0) {
+const deleteUser = async (id) => {
+  const result = await userRepo.remove(id);
+  if (result === 0) {
     throw new Error("User not found");
   }
 };
