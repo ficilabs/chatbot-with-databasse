@@ -64,3 +64,5 @@ for (let i = 0; i < 5; i++) {
 console.log("5 more random users inserted");
 
 module.exports = db;
+
+//add comment for testing git
