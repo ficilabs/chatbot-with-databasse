@@ -18,6 +18,11 @@ dist/
 build/
 .cache/
 
+# database files
+*.db
+*.sqlite
+*.sqlite3
+
 # editor
 .vscode/
 .idea/
